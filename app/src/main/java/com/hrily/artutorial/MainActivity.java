@@ -26,11 +26,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     private Camera mCamera;
     private SurfaceHolder mSurfaceHolder;
-    private boolean isCameraviewOn = false;
+    private boolean isCameraViewOn = false;
     private AugmentedPOI mPoi;
 
     private double mAzimuthReal = 0;
-    private double mAzimuthTeoretical = 0;
+    private double mAzimuthTheoretical = 0;
     private static double AZIMUTH_ACCURACY = 25;
     private double mMyLatitude = 0;
     private double mMyLongitude = 0;
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         );
     }
 
-    public double calculateTeoreticalAzimuth() {
+    public double calculateTheoreticalAzimuth() {
         double dX = mPoi.getPoiLatitude() - mMyLatitude;
         double dY = mPoi.getPoiLongitude() - mMyLongitude;
 
@@ -121,8 +121,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     }
 
     private void updateDescription() {
-        descriptionTextView.setText(mPoi.getPoiName() + " azimuthTeoretical "
-                + mAzimuthTeoretical + " azimuthReal " + mAzimuthReal + " latitude "
+        descriptionTextView.setText(mPoi.getPoiName() + " azimuthTheoretical "
+                + mAzimuthTheoretical + " azimuthReal " + mAzimuthReal + " latitude "
                 + mMyLatitude + " longitude " + mMyLongitude);
     }
 
@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     public void onLocationChanged(Location location) {
         mMyLatitude = location.getLatitude();
         mMyLongitude = location.getLongitude();
-        mAzimuthTeoretical = calculateTeoreticalAzimuth();
+        mAzimuthTheoretical = calculateTheoreticalAzimuth();
         Toast.makeText(this,"latitude: "+location.getLatitude()+" longitude: "+location.getLongitude(), Toast.LENGTH_SHORT).show();
         updateDescription();
     }
@@ -138,12 +138,12 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void onAzimuthChanged(float azimuthChangedFrom, float azimuthChangedTo) {
         mAzimuthReal = azimuthChangedTo;
-        mAzimuthTeoretical = calculateTeoreticalAzimuth();
+        mAzimuthTheoretical = calculateTheoreticalAzimuth();
 
         pointerIcon = (ImageView) findViewById(R.id.icon);
 
-        double minAngle = calculateAzimuthAccuracy(mAzimuthTeoretical).get(0);
-        double maxAngle = calculateAzimuthAccuracy(mAzimuthTeoretical).get(1);
+        double minAngle = calculateAzimuthAccuracy(mAzimuthTheoretical).get(0);
+        double maxAngle = calculateAzimuthAccuracy(mAzimuthTheoretical).get(1);
 
         if (isBetween(minAngle, maxAngle, mAzimuthReal)) {
             float perc = ((float) (mAzimuthReal - minAngle + 360.0) % 360) / ((float) (maxAngle - minAngle + 360.0) % 360);
@@ -195,16 +195,16 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                int height) {
-        if (isCameraviewOn) {
+        if (isCameraViewOn) {
             mCamera.stopPreview();
-            isCameraviewOn = false;
+            isCameraViewOn = false;
         }
 
         if (mCamera != null) {
             try {
                 mCamera.setPreviewDisplay(mSurfaceHolder);
                 mCamera.startPreview();
-                isCameraviewOn = true;
+                isCameraViewOn = true;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mCamera.stopPreview();
         mCamera.release();
         mCamera = null;
-        isCameraviewOn = false;
+        isCameraViewOn = false;
     }
 
 }
