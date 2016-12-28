@@ -6,4 +6,4 @@ The tutorial can be found [here](https://hrily.github.io/blog/2016/12/22/ar-tuto
 
 **Reference**
 
-[https://www.netguru.co/blog/augmented-reality-mobile-android]
+https://www.netguru.co/blog/augmented-reality-mobile-android
