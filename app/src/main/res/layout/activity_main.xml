@@ -1,21 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:gravity="center" >
+    android:layout_height="fill_parent" >
 
     <SurfaceView
         android:id="@+id/cameraview"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
-
-    <ImageView
-        android:id="@+id/icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:src="@android:drawable/sym_def_app_icon"
-        android:visibility="invisible" />
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <TextView
         android:id="@+id/cameraTextView"
@@ -25,5 +16,18 @@
         android:layout_alignParentLeft="true"
         android:background="#99000000"
         android:text="Large Text" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:rotation="90"
+            android:src="@android:drawable/sym_def_app_icon" />
+
+    </RelativeLayout>
 
 </RelativeLayout>

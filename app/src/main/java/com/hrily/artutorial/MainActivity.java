@@ -3,11 +3,14 @@ package com.hrily.artutorial;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.hardware.Camera;
 import android.location.Location;
 import android.support.annotation.Size;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -47,10 +50,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setupListeners();
-        setupLayout();
-        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         display = ((android.view.WindowManager)getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
         setupListeners();
@@ -62,61 +61,57 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     private void setAugmentedRealityPoint() {
         mPoi = new AugmentedPOI(
-                "Kościół Marciacki",
-                "Kościół Marciacki w Krakowie",
-                50.06169631,
-                19.93919566
+                "NITK",
+                "Surathkal",
+                13.0124554,
+                74.7980362
         );
     }
 
     public double calculateTheoreticalAzimuth() {
+        // Calculates azimuth angle (phi) of POI
         double dX = mPoi.getPoiLatitude() - mMyLatitude;
         double dY = mPoi.getPoiLongitude() - mMyLongitude;
 
         double phiAngle;
         double tanPhi;
-        double azimuth = 0;
 
         tanPhi = Math.abs(dY / dX);
         phiAngle = Math.atan(tanPhi);
         phiAngle = Math.toDegrees(phiAngle);
 
-        if (dX > 0 && dY > 0) { // I quater
-            return azimuth = phiAngle;
+        // phiAngle = [0,90], check quadrant and return correct phiAngle
+        if (dX > 0 && dY > 0) { // I quadrant
+            return phiAngle;
         } else if (dX < 0 && dY > 0) { // II
-            return azimuth = 180 - phiAngle;
+            return 180 - phiAngle;
         } else if (dX < 0 && dY < 0) { // III
-            return azimuth = 180 + phiAngle;
+            return 180 + phiAngle;
         } else if (dX > 0 && dY < 0) { // IV
-            return azimuth = 360 - phiAngle;
+            return 360 - phiAngle;
         }
 
         return phiAngle;
     }
 
     private List<Double> calculateAzimuthAccuracy(double azimuth) {
-        double minAngle = azimuth - AZIMUTH_ACCURACY;
-        double maxAngle = azimuth + AZIMUTH_ACCURACY;
+        // Returns the Camera View Sector
         List<Double> minMax = new ArrayList<Double>();
-        if (minAngle < 0)
-            minAngle += 360;
-        if (maxAngle >= 360)
-            maxAngle -= 360;
+        double minAngle = (azimuth - AZIMUTH_ACCURACY + 360) % 360;
+        double maxAngle = (azimuth + AZIMUTH_ACCURACY) % 360;
         minMax.clear();
         minMax.add(minAngle);
         minMax.add(maxAngle);
-
         return minMax;
     }
 
     private boolean isBetween(double minAngle, double maxAngle, double azimuth) {
+        // Checks if the azimuth angle lies in minAngle and maxAngle of Camera View Sector
         if (minAngle > maxAngle) {
-            if (isBetween(0, maxAngle, azimuth) && isBetween(minAngle, 360, azimuth))
+            if (isBetween(0, maxAngle, azimuth) || isBetween(minAngle, 360, azimuth))
                 return true;
-        } else {
-            if (azimuth > minAngle && azimuth < maxAngle)
-                return true;
-        }
+        } else if (azimuth > minAngle && azimuth < maxAngle)
+            return true;
         return false;
     }
 
@@ -128,17 +123,21 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     @Override
     public void onLocationChanged(Location location) {
+        // Function to handle Change in Location
         mMyLatitude = location.getLatitude();
         mMyLongitude = location.getLongitude();
         mAzimuthTheoretical = calculateTheoreticalAzimuth();
-        Toast.makeText(this,"latitude: "+location.getLatitude()+" longitude: "+location.getLongitude(), Toast.LENGTH_SHORT).show();
         updateDescription();
     }
 
     @Override
     public void onAzimuthChanged(float azimuthChangedFrom, float azimuthChangedTo) {
+        // Function to handle Change in azimuth angle
         mAzimuthReal = azimuthChangedTo;
         mAzimuthTheoretical = calculateTheoreticalAzimuth();
+
+        // Since Camera View is perpendicular to device plane
+        mAzimuthTheoretical = (mAzimuthTheoretical-90+360)%360;
 
         pointerIcon = (ImageView) findViewById(R.id.icon);
 
@@ -148,12 +147,12 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         if (isBetween(minAngle, maxAngle, mAzimuthReal)) {
             float perc = ((float) (mAzimuthReal - minAngle + 360.0) % 360) / ((float) (maxAngle - minAngle + 360.0) % 360);
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.leftMargin = display.getWidth() - (int) (display.getWidth() * perc);
-            lp.topMargin = display.getHeight()/2 - pointerIcon.getHeight();
+            lp.topMargin = display.getHeight() - (int) (display.getHeight() * perc);
+            lp.leftMargin = display.getWidth()/2 - pointerIcon.getWidth();
             pointerIcon.setLayoutParams(lp);
             pointerIcon.setVisibility(View.VISIBLE);
         } else {
-            pointerIcon.setVisibility(View.INVISIBLE);
+            pointerIcon.setVisibility(View.GONE);
         }
 
         updateDescription();
@@ -214,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         mCamera = Camera.open();
-        mCamera.setDisplayOrientation(0);
+        mCamera.setDisplayOrientation(90);
     }
 
     @Override
