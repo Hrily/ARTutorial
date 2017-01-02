@@ -145,9 +145,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         double maxAngle = calculateAzimuthAccuracy(mAzimuthReal).get(1);
 
         if (isBetween(minAngle, maxAngle, mAzimuthTheoretical)) {
-            float perc = ((float) (mAzimuthTheoretical - minAngle + 360.0) % 360) / ((float) (maxAngle - minAngle + 360.0) % 360);
+            float ratio = ((float) (mAzimuthTheoretical - minAngle + 360.0) % 360) / ((float) (maxAngle - minAngle + 360.0) % 360);
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.topMargin = (int) (display.getHeight() * perc);
+            lp.topMargin = (int) (display.getHeight() * ratio);
             lp.leftMargin = display.getWidth()/2 - pointerIcon.getWidth();
             pointerIcon.setLayoutParams(lp);
             pointerIcon.setVisibility(View.VISIBLE);
