@@ -70,24 +70,24 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     public double calculateTheoreticalAzimuth() {
         // Calculates azimuth angle (phi) of POI
-        double dX = mPoi.getPoiLatitude() - mMyLatitude;
-        double dY = mPoi.getPoiLongitude() - mMyLongitude;
+        double dy = mPoi.getPoiLatitude() - mMyLatitude;
+        double dx = mPoi.getPoiLongitude() - mMyLongitude;
 
         double phiAngle;
         double tanPhi;
 
-        tanPhi = Math.abs(dY / dX);
+        tanPhi = Math.abs(dx / dy);
         phiAngle = Math.atan(tanPhi);
         phiAngle = Math.toDegrees(phiAngle);
 
         // phiAngle = [0,90], check quadrant and return correct phiAngle
-        if (dX > 0 && dY > 0) { // I quadrant
+        if (dy > 0 && dx > 0) { // I quadrant
             return phiAngle;
-        } else if (dX < 0 && dY > 0) { // II
+        } else if (dy < 0 && dx > 0) { // II
             return 180 - phiAngle;
-        } else if (dX < 0 && dY < 0) { // III
+        } else if (dy < 0 && dx < 0) { // III
             return 180 + phiAngle;
-        } else if (dX > 0 && dY < 0) { // IV
+        } else if (dy > 0 && dx < 0) { // IV
             return 360 - phiAngle;
         }
 
@@ -137,17 +137,17 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mAzimuthTheoretical = calculateTheoreticalAzimuth();
 
         // Since Camera View is perpendicular to device plane
-        mAzimuthTheoretical = (mAzimuthTheoretical-90+360)%360;
+        mAzimuthReal = (mAzimuthReal+90)%360;
 
         pointerIcon = (ImageView) findViewById(R.id.icon);
 
-        double minAngle = calculateAzimuthAccuracy(mAzimuthTheoretical).get(0);
-        double maxAngle = calculateAzimuthAccuracy(mAzimuthTheoretical).get(1);
+        double minAngle = calculateAzimuthAccuracy(mAzimuthReal).get(0);
+        double maxAngle = calculateAzimuthAccuracy(mAzimuthReal).get(1);
 
-        if (isBetween(minAngle, maxAngle, mAzimuthReal)) {
-            float perc = ((float) (mAzimuthReal - minAngle + 360.0) % 360) / ((float) (maxAngle - minAngle + 360.0) % 360);
+        if (isBetween(minAngle, maxAngle, mAzimuthTheoretical)) {
+            float perc = ((float) (mAzimuthTheoretical - minAngle + 360.0) % 360) / ((float) (maxAngle - minAngle + 360.0) % 360);
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.topMargin = display.getHeight() - (int) (display.getHeight() * perc);
+            lp.topMargin = (int) (display.getHeight() * perc);
             lp.leftMargin = display.getWidth()/2 - pointerIcon.getWidth();
             pointerIcon.setLayoutParams(lp);
             pointerIcon.setVisibility(View.VISIBLE);
