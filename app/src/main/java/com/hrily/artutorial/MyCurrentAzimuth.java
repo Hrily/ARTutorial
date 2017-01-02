@@ -54,26 +54,6 @@ public class MyCurrentAzimuth implements SensorEventListener {
         SensorManager.getRotationMatrixFromVector(rMat, event.values);
         azimuthTo = (int) ( Math.toDegrees( SensorManager.getOrientation( rMat, orientation )[0] ) + 360 ) % 360;
 
-//        float[] gData = new float[3]; // accelerometer
-//        float[] mData = new float[3]; // magnetometer
-//        float[] rMat = new float[9];
-//        float[] iMat = new float[9];
-//        float[] orientation = new float[3];
-//        float[] data;
-//        switch ( event.sensor.getType() ) {
-//            case Sensor.TYPE_ACCELEROMETER:
-//                gData = event.values.clone();
-//                break;
-//            case Sensor.TYPE_MAGNETIC_FIELD:
-//                mData = event.values.clone();
-//                break;
-//            default: return;
-//        }
-//
-//        if ( SensorManager.getRotationMatrix( rMat, iMat, gData, mData ) ) {
-//            azimuthTo = (int) ( Math.toDegrees( SensorManager.getOrientation( rMat, orientation )[0] ) + 360 ) % 360;
-//        }
-
         mAzimuthListener.onAzimuthChanged(azimuthFrom, azimuthTo);
     }
 
