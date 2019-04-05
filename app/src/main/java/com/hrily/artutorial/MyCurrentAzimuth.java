@@ -26,18 +26,19 @@ public class MyCurrentAzimuth implements SensorEventListener {
         mContext = context;
     }
 
-    public void start(){
+    public void start() {
         sensorManager = (SensorManager) mContext.getSystemService(mContext.SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        if(sensor == null) sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
-        if(sensor == null){
+        if (sensor == null)
+            sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
+        if (sensor == null) {
             sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
             Toast.makeText(mContext, "Using Game Rotation Vector. Direction may not be accurate!", Toast.LENGTH_SHORT).show();
         }
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI);
     }
 
-    public void stop(){
+    public void stop() {
         sensorManager.unregisterListener(this);
     }
 
@@ -52,7 +53,7 @@ public class MyCurrentAzimuth implements SensorEventListener {
         float[] orientation = new float[3];
         float[] rMat = new float[9];
         SensorManager.getRotationMatrixFromVector(rMat, event.values);
-        azimuthTo = (int) ( Math.toDegrees( SensorManager.getOrientation( rMat, orientation )[0] ) + 360 ) % 360;
+        azimuthTo = (int) (Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[0]) + 360) % 360;
 
         mAzimuthListener.onAzimuthChanged(azimuthFrom, azimuthTo);
     }

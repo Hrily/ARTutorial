@@ -1,12 +1,20 @@
 package com.hrily.artutorial;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.hardware.Camera;
 import android.location.Location;
+import android.net.Uri;
 import android.support.annotation.Size;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -25,7 +33,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, OnLocationChangedListener, OnAzimuthChangedListener {
+public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, OnLocationChangedListener, OnAzimuthChangedListener, View.OnClickListener {
+
+    private static final int MY_PERMISSIONS_REQUEST_CODE = 123;
 
     private Camera mCamera;
     private SurfaceHolder mSurfaceHolder;
@@ -50,21 +60,76 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        display = ((android.view.WindowManager)getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+        checkPermission();
+    }
 
-        setupListeners();
-        setupLayout();
-        setAugmentedRealityPoint();
+    protected void checkPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                + ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                + ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                + ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS)
+                != PackageManager.PERMISSION_GRANTED) {
 
+            // Do something, when permissions not granted
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    this, Manifest.permission.CAMERA)
+                    || ActivityCompat.shouldShowRequestPermissionRationale(
+                    this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                    || ActivityCompat.shouldShowRequestPermissionRationale(
+                    this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    || ActivityCompat.shouldShowRequestPermissionRationale(
+                    this, Manifest.permission.BODY_SENSORS)) {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                ;
+                builder.setTitle("Please grant those permissions");
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        ActivityCompat.requestPermissions(
+                                MainActivity.this,
+                                new String[]{
+                                        Manifest.permission.CAMERA,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.BODY_SENSORS
+                                },
+                                MY_PERMISSIONS_REQUEST_CODE
+                        );
+                    }
+                });
+                builder.setNeutralButton("Cancel", null);
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            } else {
+                // Directly request for required permissions, without explanation
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{
+                                Manifest.permission.CAMERA,
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.BODY_SENSORS
+                        },
+                        MY_PERMISSIONS_REQUEST_CODE
+                );
+            }
+        } else {
+            display = ((android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+
+            setupListeners();
+            setupLayout();
+            setAugmentedRealityPoint();
+        }
     }
 
 
     private void setAugmentedRealityPoint() {
         mPoi = new AugmentedPOI(
-                "NITK",
-                "Surathkal",
-                13.0124554,
-                74.7980362
+                "EcoPark",
+                "Bragança",
+                41.815150,
+                -6.751510
         );
     }
 
@@ -137,9 +202,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mAzimuthTheoretical = calculateTheoreticalAzimuth();
 
         // Since Camera View is perpendicular to device plane
-        mAzimuthReal = (mAzimuthReal+90)%360;
+        mAzimuthReal = (mAzimuthReal + 90) % 360;
 
         pointerIcon = (ImageView) findViewById(R.id.icon);
+        pointerIcon.setOnClickListener(this);
 
         double minAngle = calculateAzimuthAccuracy(mAzimuthReal).get(0);
         double maxAngle = calculateAzimuthAccuracy(mAzimuthReal).get(1);
@@ -148,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             float ratio = ((float) (mAzimuthTheoretical - minAngle + 360.0) % 360) / ((float) (maxAngle - minAngle + 360.0) % 360);
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             lp.topMargin = (int) (display.getHeight() * ratio);
-            lp.leftMargin = display.getWidth()/2 - pointerIcon.getWidth();
+            lp.leftMargin = display.getWidth() / 2 - pointerIcon.getWidth();
             pointerIcon.setLayoutParams(lp);
             pointerIcon.setVisibility(View.VISIBLE);
         } else {
@@ -168,8 +234,15 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     protected void onResume() {
         super.onResume();
-        myCurrentAzimuth.start();
-        myCurrentLocation.start();
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                + ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                + ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                + ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS)
+                == PackageManager.PERMISSION_GRANTED) {
+            myCurrentAzimuth.start();
+            myCurrentLocation.start();
+        }
     }
 
     private void setupListeners() {
@@ -224,4 +297,42 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         isCameraViewOn = false;
     }
 
+    @Override
+    public void onClick(View view) {
+        String url = "https://www.itsector.pt/pt/carreiras";
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_CODE: {
+                // When request is cancelled, the results array are empty
+                if (
+                        (grantResults.length > 0) &&
+                                (grantResults[0]
+                                        + grantResults[1]
+                                        + grantResults[2]
+                                        + grantResults[3]
+                                        == PackageManager.PERMISSION_GRANTED
+                                )
+                ) {
+                    display = ((android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+
+                    setupListeners();
+                    setupLayout();
+                    setAugmentedRealityPoint();
+                } else {
+                    display = ((android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+
+                    setupListeners();
+                    setupLayout();
+                    setAugmentedRealityPoint();
+                }
+                return;
+            }
+        }
+    }
 }

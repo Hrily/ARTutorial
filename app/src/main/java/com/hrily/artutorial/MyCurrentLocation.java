@@ -38,13 +38,14 @@ public class MyCurrentLocation implements GoogleApiClient.ConnectionCallbacks, G
                 .setFastestInterval(1 * 1000); // 1 second, in milliseconds
     }
 
-    public void start(){
+    public void start() {
         mGoogleApiClient.connect();
     }
 
-    public void stop(){
+    public void stop() {
         mGoogleApiClient.disconnect();
     }
+
     @Override
     public void onConnected(Bundle bundle) {
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
